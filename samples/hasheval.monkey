@@ -1,0 +1,2 @@
+ let people = [{"name": "Alice", "age": 24}, {"name": "Anna", "age": 28}];
+ people[0]["name"];
