@@ -1,10 +1,10 @@
 
 # JSMonkey
-A port in JavaScript of the [Monkey]!(https://monkeylang.org/). The lexical and syntax analysis was done with [jison]!(https://gerhobbelt.github.io/jison/docs/).
+A port in JavaScript of the [Monkey programming language](https://monkeylang.org/). The lexical and syntax analysis was done with [jison](https://gerhobbelt.github.io/jison/docs/).
 
 ## How to use
 
-You will need [node.js]!(https://nodejs.org/en) v20.0 or greater.
+You will need [node.js](https://nodejs.org/en) v20.0 or greater.
 
 1. ```git clone https://github.com/gaagusac/jsmonkey.git```
 2. ```cd jsmonkey```
