@@ -12,7 +12,7 @@ const ArrayObj = require('./monkey_obj').ArrayObject;
 const HashObj = require('./monkey_obj').MonkeyHash;
 const HashPair = require('./monkey_obj').HashPair;
 
-// Types of expressions and statements
+// Expressions and statements
 const Program = require('./monkey_node').Program;
 const IntLit = require('./monkey_node').IntegerLiteral;
 const BoolLit = require('./monkey_node').BooleanLiteral;
@@ -35,13 +35,12 @@ const HashLiteral = require('./monkey_node').HashLiteral;
 const newEnvironment = require('./monkey_env').newEnvironment;
 const newEnclosedEnvironment = require('./monkey_env').newEnclosedEnvironment;
 
+// Runtime Objects
 const INTEGER = require('./monkey_obj').ObjectType.INTEGER;
 const STRING = require('./monkey_obj').ObjectType.STRING_OBJ;
 const ARRAY_OBJ = require('./monkey_obj').ObjectType.ARRAY_OBJ;
 const HASH_OBJ = require('./monkey_obj').ObjectType.HASH_OBJ;
-
 const RETURN_VALUE_OBJ = require('./monkey_obj').ObjectType.RETURN_VALUE;
-
 const TRUE = new BoolObj(true);
 const FALSE = new BoolObj(false);
 const NULL = new NullOjb();
@@ -58,7 +57,6 @@ builtins.set("len", new BuiltinObj((function (...args) {
   if (arg instanceof StrObj) {
     return new IntObj(Number(arg.value.length));
   } else if (arg instanceof ArrayObj) {
-    // return new IntObj(Number(0));
     return new IntObj(Number(arg.elements.length));
   } else {
     return newError(`argument to 'len' not supported, got=${arg.type()}`);
@@ -117,7 +115,7 @@ builtins.set("rest", new BuiltinObj((function (...args) {
   return NULL;
 })));
 
-// This function adds a new element to the end of the array. return a NEW array.
+// This function adds a new element to the end of the array. returns a NEW array.
 builtins.set("push", new BuiltinObj((function (...args) {
   if (args.length != 2) {
     return newError(`wrong number of arguments. got=${args.length}, want=${2}`);
@@ -133,7 +131,7 @@ builtins.set("push", new BuiltinObj((function (...args) {
   return new ArrayObj(newElements);
 })));
 
-// prints the given arguments on new ines to stdout.
+// prints the given arguments on new lines to stdout.
 builtins.set("puts", new BuiltinObj((function (...args) {
   args.forEach(arg => {
     console.log(arg.inspect());
@@ -155,26 +153,32 @@ builtins.set("str", new BuiltinObj((function (...args) {
   return NULL;
 })));
 
-// Here come evaluation of the tree
+// THe evaluation of the ast tree
 function Eval(node, env) {
 
   switch (node.constructor) {
     case Program:
       return evalProgram(node, env);
+
     case ExpressionStatement:
       return Eval(node.expression, env);
+
     case IntLit:
       return new IntObj(node.value);
+
     case BoolLit:
       return nativeBooleanToBoolObject(node.value);
+
     case StringLiteral:
       return new StrObj(node.value);
+
     case PrefixExpression:
       const right = Eval(node.right, env);
       if (isError(right)) {
         return right;
       }
       return evalPrefixExpression(node.operator, right);
+
     case InfixExpression:
       const l = Eval(node.left, env);
       if (isError(l)) {
@@ -185,16 +189,20 @@ function Eval(node, env) {
         return r;
       }
       return evalInfixExpression(node.operator, l, r);
+
     case BlockStatement:
       return evalBlockStatement(node, env);
+
     case IfExpression:
       return evalIfExpression(node, env);
+
     case ReturnStatement:
       const val = Eval(node.returnValue, env);
       if (isError(val)) {
         return val;
       }
       return new ReturnValObj(val);
+
     case LetStatement:
       const v = Eval(node.value, env);
       if (isError(v)) {
@@ -202,10 +210,13 @@ function Eval(node, env) {
       }
       env.Set(node.name.value, v);
       break;
+
     case Identifier:
       return evalIdentifier(node, env);
+
     case FunctionLiteral:
       return new FunctionObj(node.parameters, node.body, env);
+
     case CallExpression:
       const fn = Eval(node.fn, env);
       if (isError(fn)) {
@@ -216,12 +227,14 @@ function Eval(node, env) {
         return args[0];
       }
       return applyFunction(fn, args);
+
     case ArrayLiteral:
       const elements = evalExpressions(node.elements, env);
       if (elements.length == 1 && isError(elements[0])) {
         return elements[0];
       }
       return new ArrayObj(elements);
+
     case IndexExpression:
       const leftExpr = Eval(node.left, env);
       if (isError(leftExpr)) {
@@ -232,9 +245,11 @@ function Eval(node, env) {
         return indexExpr;
       }
       return evalIndexExpression(leftExpr, indexExpr);
+
     case HashLiteral:
       return evalHashLiteral(node, env);
   }
+  // Do we ever get here?
   return null;
 }
 
@@ -341,6 +356,7 @@ function evalHashIndexExpression(hash, index) {
 
   return NULL;
 }
+
 function applyFunction(fn, args) {
 
   if (fn instanceof FunctionObj) {
@@ -353,10 +369,6 @@ function applyFunction(fn, args) {
     return newError(`not a function: ${fn.type()}`);
   }
 
-  // return newError(`not a function: ${fn.type()}`);
-  // const extendedEnv = extendFunctionEnv(fn, args);
-  // const evaluated = Eval(fn.getBody(), extendedEnv);
-  // return unwrapReturnValue(evaluated);
 }
 
 function extendFunctionEnv(fn, args) {
@@ -375,18 +387,6 @@ function unwrapReturnValue(obj) {
 
   return obj;
 }
-// function evalStatements(stmts) {
-//   let result = null;
-
-//   for (let i = 0; i < stmts.length; i++) {
-//     result = Eval(stmts[i]);
-//     if (result instanceof ReturnValObj) {
-//       return result.value;
-//     }
-//   }
-
-//   return result;
-// }
 
 function evalPrefixExpression(operator, right) {
   switch (operator) {
